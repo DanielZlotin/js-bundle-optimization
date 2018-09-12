@@ -93,8 +93,13 @@ function deleteModuleMapDeclaration(j, root, mainRequireBlock) {
 function changeMapToFastRequireFn(j, root, mainRequireBlock) {
   const mapUsage1 = root.find(j.VariableDeclarator, { id: { name: 'o' }, init: { object: { name: 'e' }, property: { name: 'n' } } })
     .filter((p) => hasParent(p, mainRequireBlock));
-  if (mapUsage1.size() != 1) throw new Error(`Expected a single usage of "o = e[n]", but was ${moduleMapDeclaration.size()}`);
+  if (mapUsage1.size() != 1) throw new Error(`Expected a single usage of "o = e[n]", but was ${mapUsage1.size()}`);
   mapUsage1.get().value.init = `fastRequire(n)`;
+
+  const mapUsage2 = root.find(j.AssignmentExpression, { operator: '=', left: { name: 'a' }, right: { object: { name: 'e' }, property: { name: 'i' } } })
+    .filter((p) => hasParent(p, mainRequireBlock));
+  if (mapUsage2.size() != 1) throw new Error(`Expected a single usage of "a = e[i]", but was ${mapUsage2.size()}`);
+  mapUsage2.get().value.right = `fastRequire(i)`;
 }
 
 function hasParent(p, parent) {
