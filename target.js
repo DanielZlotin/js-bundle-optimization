@@ -1,7 +1,6 @@
 !(function (r) {
   'use strict';
-  r.require = t;
-  r.__d = function (r, t, i) {
+  r.require = t, r.__d = function (r, t, i) {
     if (t in e) return;
     e[t] = { dependencyMap: i, exports: void 0, factory: r, hasError: !1, isInitialized: !1 }
   };

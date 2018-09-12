@@ -80,7 +80,7 @@ function delete__dDeclaration(j, root, mainRequireBlock) {
   const dDeclaration = root.find(j.AssignmentExpression, { operator: '=', left: { object: { name: 'r' }, property: { name: '__d' } } })
     .filter((p) => hasParent(p, mainRequireBlock));
   if (dDeclaration.size() != 1) throw new Error(`Expected a single declaration of __d (module map registration) but was ${dDeclaration.size()}`);
-  dDeclaration.replaceWith();
+  dDeclaration.get().value.right = 'undefined';
 }
 
 function deleteModuleMapDeclaration(j, root, mainRequireBlock) {

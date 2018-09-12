@@ -1,7 +1,6 @@
 !(function (r) {
   'use strict';
-  r.require = t;
-  ;
+  r.require = t, r.__d = undefined;
 
   function t(t) {
     var n = t, o = fastRequire(n);
