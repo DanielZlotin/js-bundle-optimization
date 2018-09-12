@@ -1,0 +1,8 @@
+{
+  "name": "js-bundle-optimization",
+  "author": "Daniel Zlotin <zlotindaniel@gmail.com>",
+  "private": true,
+  "dependencies": {
+    "jscodeshift": "0.5.x"
+  }
+}
