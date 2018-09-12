@@ -3,7 +3,7 @@
   "author": "Daniel Zlotin <zlotindaniel@gmail.com>",
   "private": true,
   "scripts": {
-    "start": "clear; jscodeshift --dry --print target.js"
+    "start": "cp -f ./target.js ./output.js; jscodeshift ./output.js"
   },
   "dependencies": {
     "jscodeshift": "0.5.x"
