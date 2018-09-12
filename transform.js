@@ -6,13 +6,13 @@ module.exports = function (fileInfo, api, options) {
   const source = fileInfo.source;
   const root = j(source);
 
-  changeModuleMapDeclarationsAndRequireToFastRequireFunction(j, root);
+  changeMainRequireBlock(j, root);
 
   const modules = findAndDeleteAllModulesDeclarations(j, root);
 
   const moduleIds = modules.map((m) => m.id.value);
 
-  const program = root.get().node.program;
+  const program = root.get().value.program;
   program.body.push(...createFastModules(j, modules));
   program.body.push(...createFastModuleWrappers(moduleIds));
   program.body.push(createFastRequireFunction(moduleIds));
@@ -57,10 +57,11 @@ function fastRequire(n) {
 }`;
 }
 
-function changeModuleMapDeclarationsAndRequireToFastRequireFunction(j, root) {
+function changeMainRequireBlock(j, root) {
   const mainRequireBlock = findMainRequireBlock(j, root);
   delete__dDeclaration(j, root, mainRequireBlock);
   deleteModuleMapDeclaration(j, root, mainRequireBlock);
+  changeMapToFastRequireFn(j, root, mainRequireBlock);
 }
 
 function findMainRequireBlock(j, root) {
@@ -87,6 +88,13 @@ function deleteModuleMapDeclaration(j, root, mainRequireBlock) {
     .filter((p) => hasParent(p, mainRequireBlock));
   if (moduleMapDeclaration.size() != 1) throw new Error(`Expected a single declaration of e (module map), but was ${moduleMapDeclaration.size()}`);
   moduleMapDeclaration.replaceWith();
+}
+
+function changeMapToFastRequireFn(j, root, mainRequireBlock) {
+  const mapUsage1 = root.find(j.VariableDeclarator, { id: { name: 'o' }, init: { object: { name: 'e' }, property: { name: 'n' } } })
+    .filter((p) => hasParent(p, mainRequireBlock));
+  if (mapUsage1.size() != 1) throw new Error(`Expected a single usage of "o = e[n]", but was ${moduleMapDeclaration.size()}`);
+  mapUsage1.get().value.init = `fastRequire(n)`;
 }
 
 function hasParent(p, parent) {
