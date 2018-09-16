@@ -10,12 +10,7 @@ module.exports = function (fileInfo, api, options) {
 
   const modules = findAndDeleteAllModulesDeclarations(j, root);
 
-  const moduleIds = modules.map((m) => m.id.value);
-
-  const program = root.get().value.program;
-  program.body.push(...createFastModules(j, modules));
-  program.body.push(...createFastModuleWrappers(moduleIds));
-  program.body.push(createFastRequireFunction(moduleIds));
+  insertAllFastRequires(j, root, modules);
 
   return root.toSource();
 };
@@ -42,12 +37,12 @@ const createFastModules = (j, modules) => {
   return modules.map((m) => `const ${FAST_MODULE}${m.id.value} = ${j(m.moduleFactory).toSource()};`);
 }
 
-const createFastModuleWrappers = (ids) => {
-  return ids.map((id) => `const ${FAST_MODULE_W}${id} = { exports: void 0, factory: ${FAST_MODULE}${id}, hasError: !1, isInitialized: !1 };`);
+const createFastModuleWrappers = (modules) => {
+  return modules.map((m) => `const ${FAST_MODULE_W}${m.id.value} = { exports: void 0, factory: ${FAST_MODULE}${m.id.value}, hasError: !1, isInitialized: !1 };`);
 }
 
-const createFastRequireFunction = (ids) => {
-  const cases = ids.map((id) => `case ${id}: return ${FAST_MODULE_W}${id};`);
+const createFastRequireFunction = (modules) => {
+  const cases = modules.map((m) => `case ${m.id.value}: return ${FAST_MODULE_W}${m.id.value};`);
   return `
 function fastRequire(n) {
   switch (n) {
@@ -100,6 +95,23 @@ function changeMapToFastRequireFn(j, root, mainRequireBlock) {
     .filter((p) => hasParent(p, mainRequireBlock));
   if (mapUsage2.size() != 1) throw new Error(`Expected a single usage of "a = e[i]", but was ${mapUsage2.size()}`);
   mapUsage2.get().value.right = `fastRequire(i)`;
+}
+
+function insertAllFastRequires(j, root, modules) {
+  // const require56Statements = root.find(j.ExpressionStatement, { expression: { callee: { name: 'require' }, arguments: [{ value: 56 }] } });
+  // if (require56Statements.size() != 1) throw new Error(`Expected a single usage of "require(56)", but was ${require56Statements.size()}`);
+  // if (require56Statements.get().parentPath.parentPath.name != 'program') throw new Error(`Expected "require(56)" in the global scope`);
+
+  const program = root.get().value.program;
+
+  // const require56Start = program.body.findIndex((node) => node && node.start == require56Statements.get().value.start);
+  // if (require56Start < 0) throw new Error(`Expected "require(56)" in the global scope`);
+
+  const toAdd = createFastModules(j, modules)
+    .concat(createFastModuleWrappers(modules))
+    .concat(createFastRequireFunction(modules));
+  // program.body.splice(require56Start, 0, ...toAdd);
+  program.body.unshift(...toAdd);
 }
 
 function hasParent(p, parent) {
