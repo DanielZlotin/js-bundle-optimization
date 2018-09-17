@@ -89,7 +89,7 @@ function changeMapToFastRequireFn(j, root, mainRequireBlock) {
   const mapUsage1 = root.find(j.VariableDeclarator, { id: { name: 'o' }, init: { object: { name: 'e' }, property: { name: 'n' } } })
     .filter((p) => hasParent(p, mainRequireBlock));
   if (mapUsage1.size() != 1) throw new Error(`Expected a single usage of "o = e[n]", but was ${mapUsage1.size()}`);
-  mapUsage1.get().value.init = `fastRequire(n)`;
+  mapUsage1.get().value.init = `undefined`;
 
   const mapUsage2 = root.find(j.AssignmentExpression, { operator: '=', left: { name: 'a' }, right: { object: { name: 'e' }, property: { name: 'i' } } })
     .filter((p) => hasParent(p, mainRequireBlock));
@@ -98,19 +98,10 @@ function changeMapToFastRequireFn(j, root, mainRequireBlock) {
 }
 
 function insertAllFastRequires(j, root, modules) {
-  // const require56Statements = root.find(j.ExpressionStatement, { expression: { callee: { name: 'require' }, arguments: [{ value: 56 }] } });
-  // if (require56Statements.size() != 1) throw new Error(`Expected a single usage of "require(56)", but was ${require56Statements.size()}`);
-  // if (require56Statements.get().parentPath.parentPath.name != 'program') throw new Error(`Expected "require(56)" in the global scope`);
-
   const program = root.get().value.program;
-
-  // const require56Start = program.body.findIndex((node) => node && node.start == require56Statements.get().value.start);
-  // if (require56Start < 0) throw new Error(`Expected "require(56)" in the global scope`);
-
   const toAdd = createFastModules(j, modules)
     .concat(createFastModuleWrappers(modules))
     .concat(createFastRequireFunction(modules));
-  // program.body.splice(require56Start, 0, ...toAdd);
   program.body.unshift(...toAdd);
 }
 
